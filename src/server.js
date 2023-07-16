@@ -2,6 +2,8 @@ import express from "express";
 import mongoose from "mongoose";
 import movieRouter from "./routers/movie";
 import bodyParser from "body-parser";
+import castRouter from "./routers/cast";
+import genresRouter from "./routers/genres";
 
 const app = express();
 const port = 8080;
@@ -14,6 +16,8 @@ app.use(bodyParser.json());
 
 // Router
 app.use("/api", movieRouter);
+app.use("/api", castRouter);
+app.use("/api", genresRouter);
 
 mongoose
   .connect("mongodb://localhost:27017/ass")
