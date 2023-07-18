@@ -1,3 +1,4 @@
+import _ from "lodash";
 import Movie from "../models/movie";
 import { movieSchema, updateMovieSchema } from "../schemas/movieSchema";
 
@@ -110,17 +111,59 @@ export const update = async (req, res) => {
 export const search = async (req, res) => {
   try {
     const query = req.query.q;
-    console.log(query, "query day ne");
-    const movies = await Movie.find({ $text: { $search: query } });
-    res.send({
+
+    // Kiểm tra nếu không có từ khóa tìm kiếm được cung cấp
+    if (!query) {
+      return res.status(400).json({
+        message: "Search query is required",
+      });
+    }
+
+    // Tìm kiếm phim theo từ khóa
+    const movies = await Movie.find({
+      $or: [
+        { title: { $regex: query, $options: "i" } },
+        // { description: { $regex: query, $options: "i" } },
+      ],
+    });
+
+    res.status(200).json({
       message: "Search movies successfully",
       data: movies,
     });
   } catch (error) {
-    console.log(error, "error day ne");
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
 
-    res.status(500).send({
-      message: error,
+const compareDates = (a, b) => {
+  const dateA = new Date(a.createdAt);
+  const dateB = new Date(b.createdAt);
+
+  if (dateA < dateB) {
+    return -1;
+  } else if (dateA > dateB) {
+    return 1;
+  } else {
+    return 0;
+  }
+};
+
+export const getSortedByCreatedAt = async (req, res) => {
+  try {
+    const sortOrder = req.query.sortOrder || "desc"; // Mặc định là sắp xếp mới nhất
+
+    const movies = await Movie.find().sort({ createdAt: sortOrder });
+
+    res.status(200).json({
+      message: `Get movies sorted by created time (${sortOrder}) successfully`,
+      data: movies,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
     });
   }
 };
