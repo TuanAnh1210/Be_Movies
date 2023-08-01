@@ -1,26 +1,13 @@
-import mongoose from "mongoose";
+import mongoose, { Mongoose } from "mongoose";
 const { Schema } = mongoose;
-
-const Casts = new Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-});
 
 const Movie = new Schema({
   title: {
     type: String,
     required: true,
   },
-  genres: {
-    type: String,
-    required: true,
-  },
-  casts: {
-    type: [Casts],
-    required: true,
-  },
+  genres: { type: Schema.Types.ObjectId, ref: "Genres", required: true },
+  casts: [{ type: Schema.Types.ObjectId, ref: "Cast", required: true }],
   year: {
     type: Number,
     required: true,

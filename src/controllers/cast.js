@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Cast from "../models/cast";
 import { castSchema, updateCastSchema } from "../schemas/castSchema";
 import { updateMovieSchema } from "../schemas/movieSchema";
@@ -19,6 +20,11 @@ export const get = async (req, res) => {
 export const getById = async (req, res) => {
   try {
     const id = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: "Invalid movie ID",
+      });
+    }
     const cast = await Cast.findById(id);
     if (!cast) {
       return res.status(404).json({
@@ -39,17 +45,21 @@ export const getById = async (req, res) => {
 export const remove = async (req, res) => {
   try {
     const id = req.params.id;
-    const cast = await Cast.findByIdAndRemove(id);
-    if (cast) {
-      res.status(204).send({
-        message: "Delete successfully",
-        data: cast,
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: "Invalid cast ID",
       });
-    } else {
-      res.status(404).send({
+    }
+    const cast = await Cast.findByIdAndRemove(id);
+    if (!cast) {
+      return res.status(404).send({
         message: "The cast does not exist",
       });
     }
+    return res.status(204).send({
+      message: "Delete successfully",
+      data: cast,
+    });
   } catch (error) {
     res.status(500).send({
       message: error,
@@ -60,25 +70,29 @@ export const remove = async (req, res) => {
 export const update = async (req, res) => {
   try {
     const id = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: "Invalid cast ID",
+      });
+    }
     const body = req.body;
     const { error } = updateCastSchema.validate(body);
     if (error) {
-      res.status(400).send({
+      return res.status(400).send({
         message: error.message,
       });
-    } else {
-      const data = await Cast.findByIdAndUpdate(id, body, { new: true });
-      if (data) {
-        res.send({
-          message: "Update successfully",
-          data,
-        });
-      } else {
-        res.status(400).send({
-          message: "Cast is not existed",
-        });
-      }
     }
+    const data = await Cast.findByIdAndUpdate(id, body, { new: true });
+    if (!data) {
+      return res.status(400).send({
+        message: "Cast is not existed",
+      });
+    }
+
+    return res.send({
+      message: "Update successfully",
+      data,
+    });
   } catch (error) {
     res.status(500).send({
       message: err,
@@ -89,19 +103,18 @@ export const update = async (req, res) => {
 export const create = async (req, res) => {
   try {
     const body = req.body;
-    console.log(body);
+
     const { error } = castSchema.validate(body);
     if (error) {
-      res.status(400).send({
+      return res.status(400).send({
         message: error.message,
       });
-    } else {
-      const data = await Cast.create(body);
-      res.send({
-        message: "Create cast successfully",
-        data,
-      });
     }
+    const data = await Cast.create(body);
+    return res.send({
+      message: "Create cast successfully",
+      data,
+    });
   } catch (err) {
     res.status(500).send({
       message: "Loi server",
